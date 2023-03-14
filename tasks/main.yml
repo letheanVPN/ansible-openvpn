@@ -22,6 +22,7 @@
 
 - name: Copy Shell Files
   copy: src=bin dest=/usr mode=0777 owner=root group=root
+  tags: [ 'openvpn:bin' ]
 
 - name: Make profile dir
   command: |
@@ -30,9 +31,11 @@
 
 - name: Copy Openvpn Config
   copy: src=cert-auth-ftm.conf dest=/home/{{ created_username }}/openvpn mode=0644 owner={{ created_username }} group={{ created_username }}
+  tags: [ 'openvpn:config' ]
 
 - name: Copy Openvpn Conf dir
   copy: src=conf dest=/home/{{ created_username }}/openvpn mode=0644 owner={{ created_username }} group={{ created_username }}
+  tags: [ 'openvpn:config' ]
 
 - name: Detect firewall type
   import_tasks: firewall.yml
