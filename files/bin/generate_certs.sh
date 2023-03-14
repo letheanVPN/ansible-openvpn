@@ -252,7 +252,7 @@ esac
 done
 
 # Make directories for creation and moving generate keys
-mkdir -p build/etc
+mkdir -p $LTHN_PREFIX/build/etc
 mkdir -p $LTHN_PREFIX/etc/ca/certs
 mkdir -p $LTHN_PREFIX/etc/ca/private
 mkdir -p $LTHN_PREFIX/etc/ca/certs/client
@@ -263,13 +263,13 @@ sysconf_dir=${LTHN_PREFIX}/etc/
 ca_dir=${LTHN_PREFIX}/etc/ca/
 
 # Abort Root CA certificate creation if already exists.
-if [ -n "$generate_ca" ] && [ -f build/etc/ca/index.txt ]; then
+if [ -n "$generate_ca" ] && [ -f $LTHN_PREFIX/build/etc/ca/index.txt ]; then
     echo "CA already exists. Aborting."
     exit 2
 fi
 
 # Generate CA and place into desired folder
-if [ -n "$generate_ca" ] && ! [ -f build/etc/ca/index.txt ]; then
+if [ -n "$generate_ca" ] && ! [ -f $LTHN_PREFIX/build/etc/ca/index.txt ]; then
     export ca_pass ca_cn
     if [ -z "$ca_pass" ] || [ -z "$ca_cn" ] ; then
         echo "You must specify --with-capass yourpassword --with_cacn CN!"
@@ -279,21 +279,21 @@ if [ -n "$generate_ca" ] && ! [ -f build/etc/ca/index.txt ]; then
     	echo "Generating with default password!"
     fi
     (
-    rm -rf build/etc/ca
-    mkdir -p build/etc/ca
-    generate_ca build/etc/ca/ "$ca_cn"
+    rm -rf $LTHN_PREFIX/build/etc/ca
+    mkdir -p $LTHN_PREFIX/build/etc/ca
+    generate_ca $LTHN_PREFIX/build/etc/ca/ "$ca_cn"
     )
-    cp build/etc/ca/certs/ca.cert.pem $LTHN_PREFIX/etc/ca/certs/
+    cp $LTHN_PREFIX/build/etc/ca/certs/ca.cert.pem $LTHN_PREFIX/etc/ca/certs/
 fi
 
 # Abort server certificate creation if duplicate CN certificate already exists.
-if [ -n "$generate_server" ] && [ -f build/etc/ca/certs/"$server_cn".cert.pem ]; then
+if [ -n "$generate_server" ] && [ -f $LTHN_PREFIX/build/etc/ca/certs/"$server_cn".cert.pem ]; then
     echo "Server certificate "$server_cn" already exists. Aborting."
     exit 2
 fi
 
 # Generate server certificate using our local CA and copy into desired folder
-if [ -n "$generate_server" ] && ! [ -f build/etc/ca/certs/"$server_cn".cert.pem ]; then
+if [ -n "$generate_server" ] && ! [ -f $LTHN_PREFIX/build/etc/ca/certs/"$server_cn".cert.pem ]; then
     export server_pass server_cn
     if [ -z "$server_pass" ] || [ -z "$server_cn" ] ; then
         echo "You must specify --with-serverpass yourpassword --with_servercn CN!"
@@ -303,22 +303,22 @@ if [ -n "$generate_server" ] && ! [ -f build/etc/ca/certs/"$server_cn".cert.pem 
     	echo "Generating with default password!"
     fi
     (
-    generate_server build/etc/ca/ "$server_cn"
+    generate_server $LTHN_PREFIX/build/etc/ca/ "$server_cn"
     )
-    cp build/etc/ca/certs/"$server_cn"* $LTHN_PREFIX/etc/ca/certs/
-    cp build/etc/ca/certs/"$server_cn".cert.pem $LTHN_PREFIX/etc/ca/certs/openvpn.cert.pem
-    cp build/etc/ca/private/"$server_cn"* $LTHN_PREFIX/etc/ca/private/
-    cp build/etc/ca/private/"$server_cn".key.pem $LTHN_PREFIX/etc/ca/private/openvpn.key.pem
+    cp $LTHN_PREFIX/build/etc/ca/certs/"$server_cn"* $LTHN_PREFIX/etc/ca/certs/
+    cp $LTHN_PREFIX/build/etc/ca/certs/"$server_cn".cert.pem $LTHN_PREFIX/etc/ca/certs/openvpn.cert.pem
+    cp $LTHN_PREFIX/build/etc/ca/private/"$server_cn"* $LTHN_PREFIX/etc/ca/private/
+    cp $LTHN_PREFIX/build/etc/ca/private/"$server_cn".key.pem $LTHN_PREFIX/etc/ca/private/openvpn.key.pem
 fi
 
 # Abort client certificate creation if duplicate CN certificate already exists.
-if [ -n "$generate_client" ] && [ -f build/etc/ca/certs/client/$client_cn.cert.pem ]; then
+if [ -n "$generate_client" ] && [ -f $LTHN_PREFIX/build/etc/ca/certs/client/$client_cn.cert.pem ]; then
     echo "Client certificate "$client_cn" already exists. Aborting."
     exit 2
 fi
 
 # Generate client certificate using our local CA and copy into desired folder
-if [ -n "$generate_client" ] && ! [ -f build/etc/ca/certs/client/$client_cn.cert.pem ]; then
+if [ -n "$generate_client" ] && ! [ -f $LTHN_PREFIX/build/etc/ca/certs/client/$client_cn.cert.pem ]; then
     export client_pass client_cn
     if [ -z "$client_pass" ] || [ -z "$client_cn" ] ; then
         echo "You must specify --with-clientpass yourpassword --with_clientcn CN!"
@@ -328,37 +328,37 @@ if [ -n "$generate_client" ] && ! [ -f build/etc/ca/certs/client/$client_cn.cert
     	echo "Generating with default password!"
     fi
     (
-    generate_client build/etc/ca/ "$client_cn"
+    generate_client $LTHN_PREFIX/build/etc/ca/ "$client_cn"
     )
-    cp build/etc/ca/certs/client/"$client_cn"* $LTHN_PREFIX/etc/ca/certs/client/
-    cp build/etc/ca/private/client/"$client_cn"* $LTHN_PREFIX/etc/ca/private/client/
+    cp $LTHN_PREFIX/build/etc/ca/certs/client/"$client_cn"* $LTHN_PREFIX/etc/ca/certs/client/
+    cp $LTHN_PREFIX/build/etc/ca/private/client/"$client_cn"* $LTHN_PREFIX/etc/ca/private/client/
 fi
 
 # Abort DH key creation if already exists.
-if [ -n "$generate_dh" ] && [ -f build/etc/dhparam.pem ]; then
+if [ -n "$generate_dh" ] && [ -f $LTHN_PREFIX/build/etc/dhparam.pem ]; then
     echo "DH key already exists. Aborting."
     exit 2
 fi
 
 # Generate and copy DH key to desired folder
-if [ -n "$generate_dh" ] && ! [ -f build/etc/dhparam.pem ]; then
-    if ! [ -f build/etc/dhparam.pem ]; then
-        "$OPENSSL_BIN" dhparam -out build/etc/dhparam.pem 2048
-        cp build/etc/dhparam.pem $LTHN_PREFIX/etc/
+if [ -n "$generate_dh" ] && ! [ -f $LTHN_PREFIX/build/etc/dhparam.pem ]; then
+    if ! [ -f $LTHN_PREFIX/build/etc/dhparam.pem ]; then
+        "$OPENSSL_BIN" dhparam -out $LTHN_PREFIX/build/etc/dhparam.pem 2048
+        cp $LTHN_PREFIX/build/etc/dhparam.pem $LTHN_PREFIX/etc/
     fi
 fi
 
 # Abort tls-auth key creation if already exists.
-if [ -n "$generate_tls_auth" ] && [ -f build/etc/ta.key ]; then
+if [ -n "$generate_tls_auth" ] && [ -f $LTHN_PREFIX/build/etc/ta.key ]; then
     echo "TLS auth key already exists. Aborting."
     exit 2
 fi
 
 # Generate and copy tls-auth key to desired folder
 if [ -n "$generate_tls_auth" ] && ! [ -f build/etc/ta.key ]; then
-    if ! [ -f build/etc/ca/ta.key ]; then
-        "$OPENVPN_BIN" --genkey secret build/etc/ta.key
-        cp build/etc/ta.key $LTHN_PREFIX/etc/
+    if ! [ -f $LTHN_PREFIX/build/etc/ca/ta.key ]; then
+        "$OPENVPN_BIN" --genkey secret $LTHN_PREFIX/build/etc/ta.key
+        cp $LTHN_PREFIX/build/etc/ta.key $LTHN_PREFIX/etc/
     fi
 fi
 

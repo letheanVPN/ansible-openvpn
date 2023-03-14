@@ -20,7 +20,7 @@ if [ ! -d profile ]; then
 fi
 
 # Abort client profile creation if already exists.
-if [ -f profile/"$CLIENT_NAME".ovpn ]; then
+if [ -f $LTHN_PREFIX/profile/"$CLIENT_NAME".ovpn ]; then
     echo "Client profile "$CLIENT_NAME" already exists. Aborting."
     exit 2
 fi
