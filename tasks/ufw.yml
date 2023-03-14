@@ -19,7 +19,7 @@
 
 - name: "ufw: Deny all outgoing traffic by default"
   community.general.ufw:
-    direction: forward
+    direction: outgoing
     state: enabled
     policy: deny
     comment: "Deny all forwarding traffic by default"
