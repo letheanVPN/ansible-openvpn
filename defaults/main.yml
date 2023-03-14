@@ -1,0 +1,4 @@
+lethean_openvpn_base_dir: "/home/lthn/openvpn"
+openvpn_port: 4300
+
+openvpn_server_network: 10.8.0.0

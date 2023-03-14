@@ -162,6 +162,21 @@
     interface: tun0
     rule: allow
 
+
+- name: Setup nat table rules with MASQUERADE - ufw
+  blockinfile:
+    dest: /etc/ufw/before.rules
+    state: present
+    insertbefore: \*filter
+    block: |
+      # OpenVPN config
+      *nat
+      :POSTROUTING ACCEPT [0:0]
+      -A POSTROUTING -s {{ openvpn_server_network }}/24 -j MASQUERADE
+      COMMIT
+  notify:
+    - restart ufw
+
 - name: "ufw: port 111 tcp"
   community.general.ufw:
     direction: in
