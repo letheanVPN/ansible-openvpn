@@ -82,17 +82,17 @@ generate_ca() {
     local prefix="$1"
     local cn="$2"
     echo "Generating CA Certificate (cn=$cn)"
-    cd $prefix || exit 2
-    mkdir -p private/client certs/client csr/client newcerts || exit 2
-    touch index.txt
-    echo -n 00 >serial
-    "${OPENSSL_BIN}" genrsa -aes256 -out private/ca.key.pem -passout pass:$ca_pass 4096
-    chmod 400 private/ca.key.pem
+    cd "$prefix" || exit 2
+    mkdir -p "$prefix"/private/client "$prefix"/certs/client "$prefix"/csr/client "$prefix"/newcerts || exit 2
+    touch "$prefix"/index.txt
+    echo -n 00 > "$prefix"/serial
+    "${OPENSSL_BIN}" genrsa -aes256 -out "$prefix"/private/ca.key.pem -passout pass:$ca_pass 4096
+    chmod 400 "$prefix"/private/ca.key.pem
     "${OPENSSL_BIN}" req -config $LTHN_PREFIX/conf/ca.cfg -batch -subj "/CN=$cn" -passin pass:$ca_pass \
-      -key private/ca.key.pem \
+      -key "$prefix"/private/ca.key.pem \
       -new -x509 -days 7300 -sha256 -extensions v3_ca \
-      -out certs/ca.cert.pem
-    if ! [ -f certs/ca.cert.pem ]; then
+      -out "$prefix"/certs/ca.cert.pem
+    if ! [ -f "$prefix"/certs/ca.cert.pem ]; then
         echo "Error generating CA! See messages above."
         exit 2
     fi
@@ -103,20 +103,20 @@ generate_server() {
     local prefix="$1"
     local cn="$2"
     echo "Generating Server Certificate (cn=$cn)"
-    cd $prefix || exit 2
+    cd "$prefix" || exit 2
     "${OPENSSL_BIN}" genrsa -aes256 \
-      -out private/"$cn".key.pem -passout pass:$server_pass 4096
-    chmod 400 private/"$cn".key.pem
+      -out "$prefix"/private/"$cn".key.pem -passout pass:$server_pass 4096
+    chmod 400 "$prefix"/private/"$cn".key.pem
     "${OPENSSL_BIN}" req -config $LTHN_PREFIX/conf/ca.cfg -batch -subj "/CN=$cn" -passin "pass:$server_pass" \
-      -key private/"$cn".key.pem \
-      -new -sha256 -out csr/"$cn".csr.pem
+      -key "$prefix"/private/"$cn".key.pem \
+      -new -sha256 -out "$prefix"/csr/"$cn".csr.pem
     "${OPENSSL_BIN}" ca -batch -config $LTHN_PREFIX/conf/ca.cfg -subj "/CN=$cn" -passin "pass:$server_pass" \
       -extensions server_cert -days 375 -notext -md sha256 \
-      -in csr/"$cn".csr.pem \
-      -out certs/"$cn".cert.pem
-    (cat certs/ca.cert.pem certs/"$cn".cert.pem; openssl rsa -passin "pass:$server_pass" -text <private/"$cn".key.pem) >certs/"$cn".all.pem
-    (cat certs/"$cn".cert.pem; openssl rsa -passin "pass:$server_pass" -text <private/"$cn".key.pem) >certs/"$cn".both.pem
-    if ! [ -f certs/"$cn".cert.pem ]; then
+      -in "$prefix"/csr/"$cn".csr.pem \
+      -out "$prefix"/certs/"$cn".cert.pem
+    (cat "$prefix"/certs/ca.cert.pem certs/"$cn".cert.pem; openssl rsa -passin "pass:$server_pass" -text < "$prefix"/private/"$cn".key.pem) > "$prefix"/certs/"$cn".all.pem
+    (cat "$prefix"/certs/"$cn".cert.pem; openssl rsa -passin "pass:$server_pass" -text < "$prefix"/private/"$cn".key.pem) > "$prefix"/certs/"$cn".both.pem
+    if ! [ -f "$prefix"/certs/"$cn".cert.pem ]; then
         echo "Error generating cert $cn! See messages above."
         exit 2
     fi
@@ -127,20 +127,20 @@ generate_client() {
     local prefix="$1"
     local cn="$2"
     echo "Generating Client Certificate (cn=$cn)"
-    cd $prefix || exit 2
+    cd "$prefix" || exit 2
     "${OPENSSL_BIN}" genrsa -aes256 \
-      -out private/client/"$cn".key.pem -passout pass:$client_pass 2048
-    chmod 400 private/client/"$cn".key.pem
+      -out "$prefix"/private/client/"$cn".key.pem -passout pass:$client_pass 2048
+    chmod 400 "$prefix"/private/client/"$cn".key.pem
     "${OPENSSL_BIN}" req -config $LTHN_PREFIX/conf/ca.cfg -batch -subj "/CN=$cn" -passin "pass:$client_pass" \
-      -key private/client/"$cn".key.pem \
-      -new -sha256 -out csr/client/"$cn".csr.pem
+      -key "$prefix"/private/client/"$cn".key.pem \
+      -new -sha256 -out "$prefix"/csr/client/"$cn".csr.pem
     "${OPENSSL_BIN}" ca -batch -config $LTHN_PREFIX/conf/ca.cfg -subj "/CN=$cn" -passin "pass:$client_pass" \
       -extensions usr_cert -days 375 -notext -md sha256 \
-      -in csr/client/"$cn".csr.pem \
-      -out certs/client/"$cn".cert.pem
-    (cat certs/ca.cert.pem certs/client/"$cn".cert.pem; openssl rsa -passin "pass:$client_pass" -text <private/client/"$cn".key.pem) >certs/client/"$cn".all.pem
-    (cat certs/client/"$cn".cert.pem; openssl rsa -passin "pass:$client_pass" -text <private/client/"$cn".key.pem) >certs/client/"$cn".both.pem
-    if ! [ -f certs/client/"$cn".cert.pem ]; then
+      -in "$prefix"/csr/client/"$cn".csr.pem \
+      -out "$prefix"/certs/client/"$cn".cert.pem
+    (cat "$prefix"/certs/ca.cert.pem "$prefix"/certs/client/"$cn".cert.pem; openssl rsa -passin "pass:$client_pass" -text < "$prefix"/private/client/"$cn".key.pem) > "$prefix"/certs/client/"$cn".all.pem
+    (cat "$prefix"/certs/client/"$cn".cert.pem; openssl rsa -passin "pass:$client_pass" -text < "$prefix"/private/client/"$cn".key.pem) > "$prefix"/certs/client/"$cn".both.pem
+    if ! [ -f "$prefix"/certs/client/"$cn".cert.pem ]; then
         echo "Error generating cert $cn! See messages above."
         exit 2
     fi
