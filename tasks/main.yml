@@ -1,0 +1,58 @@
+---
+- name: Install iptables-persistent (Debian/Ubuntu)
+  package:
+    name: "{{ package_name_iptables_persistent }}"
+    state: present
+  register: __iptables_installed
+  when: ansible_os_family == "Debian"
+
+- name: Install Packages
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - "{{ package_name_openvpn }}"
+    - "{{ package_name_openssl }}"
+
+- name: Ensure group 'nogroup' is present
+  group:
+    name: nogroup
+    state: present
+    system: true
+
+- name: Copy Shell Files
+  copy: src=bin dest=/usr mode=0777 owner=root group=root
+
+- name: Make profile dir
+  command: |
+    mkdir -p /home/{{ created_username }}/openvpn/profile
+    mkdir -p /home/{{ created_username }}/openvpn/data
+
+- name: Copy Openvpn Config
+  copy: src=cert-auth-ftm.conf dest=/home/{{ created_username }}/openvpn mode=0644 owner={{ created_username }} group={{ created_username }}
+
+- name: Copy Openvpn Conf dir
+  copy: src=conf dest=/home/{{ created_username }}/openvpn mode=0644 owner={{ created_username }} group={{ created_username }}
+
+- name: Detect firewall type
+  import_tasks: firewall.yml
+
+
+
+- name: create gluster volume
+  gluster.gluster.gluster_volume:
+    state: present
+    name: vpn-profiles
+    bricks: /home/{{ created_username }}/openvpn/data
+    rebalance: yes
+    cluster: "{{ vpn_main_nodes_ips }}"
+    force: true
+  run_once: true
+
+- name: Mount Gluster dir
+  mount:
+    name: /home/{{ created_username }}/openvpn/profile
+    src: "{{ ansible_default_ipv4.address|default(ansible_all_ipv4_addresses[0]) }}:vpn-profiles"
+    fstype: glusterfs
+    state: mounted
+

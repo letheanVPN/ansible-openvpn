@@ -1,0 +1,19 @@
+- name: save iptables rules (Debian/Ubuntu and CentOS/RHEL/Fedora)
+  shell: "{{ iptables_save_command }}"  # noqa command-instead-of-shell
+  when: ansible_os_family == 'Debian' or ansible_os_family == 'RedHat'
+  listen: "save iptables"
+
+- name: restart iptables
+  service:
+    name: iptables
+    state: restarted
+
+- name: restart firewalld
+  service:
+    name: firewalld
+    state: restarted
+
+- name: restart ufw
+  service:
+    name: ufw
+    state: restarted

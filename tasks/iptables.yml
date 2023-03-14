@@ -1,0 +1,111 @@
+---
+#- name: Setup iptables Postrouting
+#  iptables:
+#    chain: POSTROUTING
+#    source: "{{ openvpn_subnet }}/24"
+#    chain_management: true
+#    jump: MASQUERADE
+#    action: insert
+#  notify: "save iptables"
+
+- name: Change facts to use netfilter-persistent on Debian >= 9 or Ubuntu >= 16
+  set_fact:
+    iptables_save_command: "/usr/sbin/netfilter-persistent save"
+    iptables_service: netfilter-persistent
+  when: >-
+    (ansible_distribution == 'Debian' and ansible_distribution_version|int >= 9)
+    or
+    (ansible_distribution == 'Ubuntu' and ansible_lsb.major_release|int >= 16)
+
+- name: Setup iptables Postrouting
+  iptables:
+    chain: FORWARD
+    in_interface: tun+
+    jump: ACCEPT
+    action: insert
+  notify: "save iptables"
+
+- name: Allow VPN forwarding - iptables
+  iptables:
+    chain: FORWARD
+    in_interface: tun+
+    out_interface: eth0
+    ctstate: RELATED,ESTABLISHED
+    jump: ACCEPT
+    action: insert
+  notify: "save iptables"
+
+- name: Allow VPN forwarding - iptables
+  iptables:
+    chain: FORWARD
+    in_interface: eth0
+    out_interface: tun+
+    ctstate: RELATED,ESTABLISHED
+    jump: ACCEPT
+    action: insert
+  notify: "save iptables"
+
+- name: Allow incoming SSH connections - iptables
+  iptables:
+    chain: INPUT
+    protocol: tcp
+    destination_port: "{{ ansible_port | default(22) }}"
+    jump: ACCEPT
+    action: insert
+    comment: "Allow incoming SSH connection"
+  notify: "save iptables"
+
+- name: Allow incoming GlusterFS connections - iptables
+  iptables:
+    chain: INPUT
+    protocol: tcp
+    destination_port: "111"
+    jump: ACCEPT
+    action: insert
+  notify: "save iptables"
+- name: Allow incoming GlusterFS connections - iptables
+  iptables:
+    chain: INPUT
+    protocol: udp
+    destination_port: "111"
+    jump: ACCEPT
+    action: insert
+  notify: "save iptables"
+- name: Allow incoming GlusterFS connections - iptables
+  iptables:
+    chain: INPUT
+    protocol: tcp
+    destination_port: "24007"
+    jump: ACCEPT
+    action: insert
+  notify: "save iptables"
+- name: Allow incoming GlusterFS connections - iptables
+  iptables:
+    chain: INPUT
+    protocol: tcp
+    destination_port: "24008"
+    jump: ACCEPT
+    action: insert
+  notify: "save iptables"
+- name: Allow incoming GlusterFS connections - iptables
+  iptables:
+    chain: INPUT
+    protocol: tcp
+    destination_port: "24009"
+    jump: ACCEPT
+    action: insert
+  notify: "save iptables"
+#- name: Allow incoming GlusterFS connections - iptables
+#  iptables:
+#    chain: INPUT
+#    protocol: tcp
+#    destination_port: "49152-49252"
+#    jump: ACCEPT
+#    action: insert
+#  notify: "save iptables"
+
+- name: Save existing iptables rule before start iptables service
+  shell: "{{ iptables_save_command }}"  # noqa command-instead-of-shell
+  when: __iptables_installed.changed | bool  # noqa no-handler
+
+

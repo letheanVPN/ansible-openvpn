@@ -1,0 +1,213 @@
+---
+- name: Start ufw service
+  service:
+    name: ufw
+    enabled: true
+    state: started
+
+- name: Ensure OpenSSH is open
+  community.general.ufw:
+    rule: allow
+    name: OpenSSH
+
+- name: "ufw: Deny all incoming traffic by default"
+  community.general.ufw:
+    direction: incoming
+    state: enabled
+    policy: deny
+    comment: "Deny all incoming traffic by default"
+
+- name: "ufw: Deny all outgoing traffic by default"
+  community.general.ufw:
+    direction: forward
+    state: enabled
+    policy: deny
+    comment: "Deny all forwarding traffic by default"
+
+- name: "ufw: Allow all outgoing traffic by default"
+  community.general.ufw:
+    direction: outgoing
+    state: enabled
+    policy: allow
+    comment: "Allow all outgoing traffic by default"
+
+- name: "ufw: Allow incoming traffic on loopback interface"
+  community.general.ufw:
+    direction: incoming
+    interface: lo
+    state: enabled
+    policy: allow
+    comment: "Allow incoming traffic on loopback interface"
+
+- name: "ufw: Allow outgoing traffic on loopback interface"
+  community.general.ufw:
+    direction: outgoing
+    interface: lo
+    state: enabled
+    policy: allow
+    comment: "Allow outgoing traffic on loopback interface"
+
+- name: "ufw: Allow OpenVPN connections"
+  community.general.ufw:
+    port: 1194
+    proto: udp
+    state: enabled
+    policy: allow
+    comment: "Allow OpenVPN connections"
+
+- name: "ufw: Allow DNS queries to 8.8.8.8"
+  community.general.ufw:
+    to_ip: 8.8.8.8
+    proto: udp
+    port: 53
+    state: enabled
+    policy: allow
+    comment: "Allow DNS queries to Google DNS"
+
+- name: "ufw: Allow DNS queries to 8.8.4.4"
+  community.general.ufw:
+    to_ip: 8.8.4.4
+    proto: udp
+    port: 53
+    state: enabled
+    policy: allow
+    comment: "Allow DNS queries to Google DNS"
+
+- name: "ufw: Allow HTTP traffic to the Internet"
+  community.general.ufw:
+    to_ip: any
+    direction: outgoing
+    proto: any
+    port: 80
+    state: enabled
+    policy: allow
+    comment: "Allow HTTP traffic"
+
+- name: "ufw: Allow HTTPS traffic to the Internet"
+  community.general.ufw:
+    to_ip: any
+    direction: outgoing
+    proto: any
+    port: 443
+    state: enabled
+    policy: allow
+    comment: "Allow HTTPS traffic"
+
+- name: "ufw: Allow NTP traffic to the Internet"
+  community.general.ufw:
+    to_ip: any
+    direction: outgoing
+    proto: any
+    port: 123
+    state: enabled
+    policy: allow
+    comment: "Allow NTP traffic"
+
+- name: "ufw: Allow OpenVPN traffic to the Internet"
+  community.general.ufw:
+    interface: tun0
+    direction: incoming
+    proto: any
+    port: any
+    state: enabled
+    policy: allow
+    comment: "Allow OpenVPN traffic"
+
+- name: "ufw: Block OpenVPN clients from accessing the server and the local network"
+  community.general.ufw:
+    interface: tun0
+    direction: incoming
+    to_ip: 10.0.0.0/8
+    from_ip: any
+    state: enabled
+    policy: deny
+    comment: "Deny OpenVPN clients access to all local private RFC1918 networks"
+
+- name: "ufw: Block OpenVPN clients from accessing the server and the local network"
+  community.general.ufw:
+      interface: tun0
+      direction: incoming
+      to_ip: 172.16.0.0/12
+      from_ip: any
+      state: enabled
+      policy: deny
+      comment: "Deny OpenVPN clients access to all local private RFC1918 networks"
+
+- name: "ufw: Block OpenVPN clients from accessing the server and the local network"
+  community.general.ufw:
+      interface: tun0
+      direction: incoming
+      to_ip: 192.168.0.0/16
+      from_ip: any
+      state: enabled
+      policy: deny
+      comment: "Deny OpenVPN clients access to all local private RFC1918 networks"
+
+- name: Enable forwarding - ufw
+  lineinfile:
+    dest: /etc/default/ufw
+    regexp: "^DEFAULT_FORWARD_POLICY="
+    line: DEFAULT_FORWARD_POLICY="ACCEPT"
+
+- name: Allow incoming VPN connections - ufw
+  community.general.ufw:
+    direction: in
+    proto: "{{ openvpn_proto }}"
+    to_port: "{{ openvpn_port | string }}"
+    rule: allow
+
+- name: Accept packets from VPN tunnel adaptor - ufw
+  community.general.ufw:
+    direction: in
+    interface: tun0
+    rule: allow
+
+- name: "ufw: port 111 tcp"
+  community.general.ufw:
+    direction: in
+    proto: tcp
+    to_port: 111
+    rule: allow
+
+- name: "ufw: port 111 udp"
+  community.general.ufw:
+    direction: in
+    proto: udp
+    to_port: 111
+    rule: allow
+
+- name: "ufw: port 24007 tcp"
+  community.general.ufw:
+    direction: in
+    proto: tcp
+    to_port: 24007
+    rule: allow
+
+- name: "ufw: port 24008 tcp"
+  community.general.ufw:
+    direction: in
+    proto: tcp
+    to_port: 24008
+    rule: allow
+
+- name: "ufw: port 24009 tcp"
+  community.general.ufw:
+    direction: in
+    proto: tcp
+    to_port: 24009
+    rule: allow
+
+- name: "ufw: port 49152:49252 tcp"
+  community.general.ufw:
+    direction: in
+    proto: tcp
+    to_port: 49152:49252
+    rule: allow
+
+- name: restart ufw
+  service:
+    name: ufw
+    state: restarted
+
+
+
